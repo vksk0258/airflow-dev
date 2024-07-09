@@ -1,5 +1,4 @@
 # 현대홈쇼핑 airflow 개발 repo
-----
 
 ## - 필수사항
   - **무조건 git push 전 git patch => git pull (브랜치 충돌 방지)**
