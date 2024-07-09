@@ -1,10 +1,9 @@
 from airflow import DAG
-from airflow.operators.python_operator import PythonOperator
+from airflow.operators.python import PythonOperator
 from airflow.providers.oracle.hooks.oracle import OracleHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from datetime import datetime
 import pandas as pd
-from sqlalchemy import create_engine
 
 default_args = {
     'owner': 'mason',
