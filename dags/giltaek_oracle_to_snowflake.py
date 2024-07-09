@@ -6,6 +6,8 @@ import pendulum
 from datetime import datetime
 import pandas as pd
 
+
+
 with DAG(
     dag_id="giltaek_oracle_to_snowflake",
     # 이덱은 매일 6시 30분에 시작
@@ -98,22 +100,19 @@ with DAG(
     extract_task = PythonOperator(
         task_id='extract_from_oracle',
         python_callable=extract_from_oracle,
-        provide_context=True,
-        dag=dag,
+        provide_context=True
     )
 
     transform_task = PythonOperator(
         task_id='transform_data',
         python_callable=transform_data,
-        provide_context=True,
-        dag=dag,
+        provide_context=True
     )
 
     load_task = PythonOperator(
         task_id='load_to_snowflake',
         python_callable=load_to_snowflake,
-        provide_context=True,
-        dag=dag,
+        provide_context=True
     )
 
     extract_task >> transform_task >> load_task
