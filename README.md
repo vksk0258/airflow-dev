@@ -1,7 +1,7 @@
 # 현대홈쇼핑 airflow 개발 repo
 
 ## - 필수사항
-  - **무조건 git push 전 git patch => git pull (브랜치 충돌 방지)**
+  - **무조건 git push 전 git patch => git pull 코드 최신화 (브랜치 충돌 방지)**
   - **yaml 파일 및 airflow.cfg 파일 변경 및 서버 환경 변경 사항은 무조건 기입**
   - **자신이 만든 덱 .py는 자신의 이름 앞에 기입  >> 이름_덱이름.py <<**
       - ex) giltaek_oracle_to_snowflake.py 
