@@ -15,7 +15,7 @@ default_args = {
 }
 
 dag = DAG(
-    'snowflake_transform_test2',
+    'giltaek_oracle_to_snowflake',
     default_args=default_args,
     description='Extract from Oracle, transform, and load to Snowflake',
     schedule_interval='@daily',
