@@ -14,7 +14,7 @@ default_args = {
 }
 
 dag = DAG(
-    'oracle_etl_test_dag',
+    'moonoh_oracle_etl_test_dag',
     default_args=default_args,
     schedule_interval='30 10 * * *',
     catchup=False

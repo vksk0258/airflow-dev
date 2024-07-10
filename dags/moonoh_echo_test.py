@@ -16,7 +16,7 @@ def print_random_quote():
     print('Quote of the day: "{}"'.format(quote))
 
 dag = DAG(
-    'welcome_dag',
+    'moonoh_echo_test',
     default_args={'start_date': days_ago(1)},
     schedule_interval='0 23 * * *',
     catchup=False
