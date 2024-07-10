@@ -80,7 +80,7 @@ default_args = {
 }
 
 with DAG(
-    dag_id='ora_to_snow_sc_dag',
+    dag_id='seongcheon_oracle_to_snowflake',
     default_args=default_args,
     schedule_interval=None,
     catchup=False,
