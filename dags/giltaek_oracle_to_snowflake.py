@@ -9,6 +9,68 @@ from datetime import datetime
 import pandas as pd
 
 FILE_PATH = os.path.join('bank_data.csv')
+default_args = {
+    'owner': 'airflow'
+}
+
+def extract_from_oracle():
+    oracle_hook = OracleHook(oracle_conn_id='Ora_mason')
+    sql = """
+    SELECT * FROM (SELECT ENTITY_NAME, CITY, STATE_ABBREVIATION, VARIABLE_NAME, YEAR, MONTH, VALUE, UNIT, DEFINITION
+    FROM MASON.FINANCIAL_ENTITY_ANNUAL_TIME_SERIES) WHERE ROWNUM <= 100
+    """
+    connection = oracle_hook.get_conn()
+    cursor = connection.cursor()
+    cursor.execute(sql)
+    data = cursor.fetchall()
+    column_names = [desc[0] for desc in cursor.description]
+    df = pd.DataFrame(data, columns=column_names)
+    cursor.close()
+    connection.close()
+    return df.to_dict('records')
+
+
+def transform_data(**kwargs):
+    ti = kwargs['ti']
+    data = ti.xcom_pull(task_ids='extract_from_oracle')
+    df = pd.DataFrame(data)
+
+    df_pivot = df.pivot_table(
+        index=['ENTITY_NAME', 'CITY', 'STATE_ABBREVIATION', 'YEAR'],
+        columns='VARIABLE_NAME',
+        values='VALUE',
+        aggfunc='first'
+    ).reset_index()
+
+    df_pivot.columns = [str(col) if isinstance(col, tuple) else col for col in df_pivot.columns]
+    df_transformed = df_pivot.rename_axis(None, axis=1).reset_index(drop=True)
+    print(df_transformed)
+    return df_transformed.to_dict('records')
+
+
+def load_to_snowflake(**kwargs):
+    ti = kwargs['ti']
+    data = ti.xcom_pull(task_ids='transform_data')
+    df = pd.DataFrame(data)
+
+    df.to_csv("./table.csv", header=False)
+
+    snowflake_hook = SnowflakeHook(snowflake_conn_id='Snow_mason')
+    connection = snowflake_hook.get_conn()
+    cursor = connection.cursor()
+    cursor.execute("PUT file://./bank_data.csv @bank_stage")
+
+    print(f"snow put")
+    # 데이터 로드
+    cursor.execute("""
+            COPY INTO FINANCIAL_SC
+            FROM @bank_stage/bank_data.csv
+            FILE_FORMAT = (TYPE = 'CSV', FIELD_OPTIONALLY_ENCLOSED_BY='"',  SKIP_HEADER = 1)
+        """)
+
+    print(f"snow copy")
+    connection.close()
+    cursor.close()
 
 with DAG(
     dag_id="giltaek_oracle_to_snowflake",
@@ -21,80 +83,19 @@ with DAG(
     catchup=False,
     tags=["옵션", "태그"]
 ) as dag:
-    def extract_from_oracle():
-        oracle_hook = OracleHook(oracle_conn_id='Ora_mason')
-        sql = """
-        SELECT * FROM (SELECT ENTITY_NAME, CITY, STATE_ABBREVIATION, VARIABLE_NAME, YEAR, MONTH, VALUE, UNIT, DEFINITION
-        FROM MASON.FINANCIAL_ENTITY_ANNUAL_TIME_SERIES) WHERE ROWNUM <= 100
-        """
-        connection = oracle_hook.get_conn()
-        cursor = connection.cursor()
-        cursor.execute(sql)
-        data = cursor.fetchall()
-        column_names = [desc[0] for desc in cursor.description]
-        df = pd.DataFrame(data, columns=column_names)
-        cursor.close()
-        connection.close()
-        return df.to_dict('records')
-
-    def transform_data(**kwargs):
-        ti = kwargs['ti']
-        data = ti.xcom_pull(task_ids='extract_from_oracle')
-        df = pd.DataFrame(data)
-
-        df_pivot = df.pivot_table(
-            index=['ENTITY_NAME', 'CITY', 'STATE_ABBREVIATION', 'YEAR'],
-            columns='VARIABLE_NAME',
-            values='VALUE',
-            aggfunc='first'
-        ).reset_index()
-
-        df_pivot.columns = [str(col) if isinstance(col, tuple) else col for col in df_pivot.columns]
-        df_transformed = df_pivot.rename_axis(None, axis=1).reset_index(drop=True)
-        print(df_transformed)
-        return df_transformed.to_dict('records')
-
-    def load_to_snowflake(**kwargs):
-        ti = kwargs['ti']
-        data = ti.xcom_pull(task_ids='transform_data')
-        df = pd.DataFrame(data)
-
-        df.to_csv("./table.csv", header=False)
-
-        snowflake_hook = SnowflakeHook(snowflake_conn_id='Snow_mason')
-        connection = snowflake_hook.get_conn()
-        cursor = connection.cursor()
-        cursor.execute("PUT file://./bank_data.csv @bank_stage")
-
-        print(f"snow put")
-        # 데이터 로드
-        cursor.execute("""
-                COPY INTO FINANCIAL_SC
-                FROM @bank_stage/bank_data.csv
-                FILE_FORMAT = (TYPE = 'CSV', FIELD_OPTIONALLY_ENCLOSED_BY='"',  SKIP_HEADER = 1)
-            """)
-
-        print(f"snow copy")
-        cursor.close()
-
-
-
     extract_task = PythonOperator(
         task_id='extract_from_oracle',
-        python_callable=extract_from_oracle,
-        provide_context=True
+        python_callable=extract_from_oracle
     )
 
     transform_task = PythonOperator(
         task_id='transform_data',
-        python_callable=transform_data,
-        provide_context=True
+        python_callable=transform_data
     )
 
     load_task = PythonOperator(
         task_id='load_to_snowflake',
-        python_callable=load_to_snowflake,
-        provide_context=True
+        python_callable=load_to_snowflake
     )
 
     extract_task >> transform_task >> load_task
