@@ -95,7 +95,8 @@ with DAG(
 
     load_task = PythonOperator(
         task_id='load_to_snowflake',
-        python_callable=load_to_snowflake
+        python_callable=load_to_snowflake,
+        provide_context=True
     )
 
     extract_task >> transform_task >> load_task
