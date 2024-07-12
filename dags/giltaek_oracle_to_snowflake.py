@@ -55,7 +55,7 @@ def load_to_snowflake(**kwargs):
 
     df.to_csv("./table.csv", header=False)
 
-    snowflake_hook = SnowflakeHook(snowflake_conn_id='Snow_mason')
+    snowflake_hook = SnowflakeHook(snowflake_conn_id='Snow _itsmart')
     connection = snowflake_hook.get_conn()
     cursor = connection.cursor()
     cursor.execute("PUT file://./bank_data.csv @bank_stage")
