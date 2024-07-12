@@ -1,3 +1,5 @@
+import os
+import csv
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.providers.oracle.hooks.oracle import OracleHook
@@ -6,7 +8,7 @@ import pendulum
 from datetime import datetime
 import pandas as pd
 
-
+FILE_PATH = os.path.join('bank_data.csv')
 
 with DAG(
     dag_id="giltaek_oracle_to_snowflake",
@@ -62,35 +64,15 @@ with DAG(
         snowflake_hook = SnowflakeHook(snowflake_conn_id='Snow_mason')
         connection = snowflake_hook.get_conn()
         cursor = connection.cursor()
-
-        create_table_sql = """
-        CREATE TABLE IF NOT EXISTS MASON.FINANCIAL_ENTITY_ANNUAL_TIME_SERIES_TRANSFORMED (
-            ENTITY_NAME STRING,
-            CITY STRING,
-            STATE_ABBREVIATION STRING,
-            YEAR NUMBER,
-            "Total Assets" NUMBER,
-            "Total Securities" NUMBER,
-            "Total deposits" NUMBER,
-            "% Insured (Estimated)" NUMBER,
-            "All Real Estate Loans" NUMBER
-        );
-        """
-
-        cursor.execute(create_table_sql)
-
-        connection.commit()
-
-        stage_name = 'bank_stage'
-        cursor.execute("PUT file://./table.csv")
+        cursor.execute("PUT file://./bank_data.csv @bank_stage")
 
         print(f"snow put")
         # 데이터 로드
         cursor.execute("""
-            COPY INTO FINANCIAL_SC
-            FROM @bank_stage/table.csv
-            FILE_FORMAT = (TYPE = 'CSV', FIELD_OPTIONALLY_ENCLOSED_BY='"')
-        """)
+                COPY INTO FINANCIAL_SC
+                FROM @bank_stage/bank_data.csv
+                FILE_FORMAT = (TYPE = 'CSV', FIELD_OPTIONALLY_ENCLOSED_BY='"',  SKIP_HEADER = 1)
+            """)
 
         print(f"snow copy")
         cursor.close()
