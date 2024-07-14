@@ -8,7 +8,10 @@ import pendulum
 from datetime import datetime
 import pandas as pd
 
-FILE_PATH = os.path('./bank_data.csv')
+# 공유 디렉토리 설정
+SHARED_DIR = './'
+#os.makedirs(SHARED_DIR, exist_ok=True)
+FILE_PATH = os.path.join(SHARED_DIR, 'bank_data.csv')
 
 def extract_from_oracle():
     oracle_hook = OracleHook(oracle_conn_id='Ora_mason')
