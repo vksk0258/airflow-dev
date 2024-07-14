@@ -8,10 +8,7 @@ import pendulum
 from datetime import datetime
 import pandas as pd
 
-FILE_PATH = os.path.join('bank_data.csv')
-default_args = {
-    'owner': 'airflow'
-}
+FILE_PATH = os.path('./bank_data.csv')
 
 def extract_from_oracle():
     oracle_hook = OracleHook(oracle_conn_id='Ora_mason')
@@ -44,16 +41,8 @@ def transform_data(**kwargs):
 
     df_pivot.columns = [str(col) if isinstance(col, tuple) else col for col in df_pivot.columns]
     df_transformed = df_pivot.rename_axis(None, axis=1).reset_index(drop=True)
-    print(df_transformed)
-    return df_transformed.to_dict('records')
 
-
-def load_to_snowflake(**kwargs):
-    ti = kwargs['ti']
-    data = ti.xcom_pull(task_ids='transform_data')
-    df = pd.DataFrame(data)
-
-    df.to_csv("./table.csv", header=False)
+    df_transformed.to_csv("./table.csv", header=False)
 
     snowflake_hook = SnowflakeHook(snowflake_conn_id='Snow _itsmart')
     connection = snowflake_hook.get_conn()
@@ -71,6 +60,7 @@ def load_to_snowflake(**kwargs):
     print(f"snow copy")
     connection.close()
     cursor.close()
+    os.remove(FILE_PATH)
 
 with DAG(
     dag_id="giltaek_oracle_to_snowflake",
@@ -93,10 +83,4 @@ with DAG(
         python_callable=transform_data
     )
 
-    load_task = PythonOperator(
-        task_id='load_to_snowflake',
-        python_callable=load_to_snowflake,
-        provide_context=True
-    )
-
-    extract_task >> transform_task >> load_task
+    extract_task >> transform_task
