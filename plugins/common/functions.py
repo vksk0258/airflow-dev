@@ -12,7 +12,6 @@ def extract_from_oracle(**kwargs):
     cursor = connection.cursor()
     cursor.execute(sql)
     ti = kwargs['ti']
-    ti.xcom_push(key="sql_exec", value=cursor)
     data = cursor.fetchall()
     ti.xcom_push(key="cursor_fetchall", value=data)
     column_names = [desc[0] for desc in cursor.description]
