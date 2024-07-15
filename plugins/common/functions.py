@@ -1,6 +1,7 @@
 from airflow.providers.oracle.hooks.oracle import OracleHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 import pandas as pd
+import pprint
 
 def extract_from_oracle(**kwargs):
     oracle_hook = OracleHook(oracle_conn_id='ora_mason')
@@ -37,15 +38,13 @@ def transform_data(**kwargs):
     df_pivot.columns = [str(col) if isinstance(col, tuple) else col for col in df_pivot.columns]
     df_transformed = df_pivot.rename_axis(None, axis=1).reset_index(drop=True)
 
-    print(df_transformed)
-    df_transformed.to_csv("./bank_data.csv", header=False)
+    pprint.pprint(df_transformed)
+    df_transformed.to_csv("/opt/airflow/plugins/shell/bank_data.csv", header=False)
 
-    print('test1')
     snowflake_hook = SnowflakeHook(snowflake_conn_id='snow_itsmart')
     connection = snowflake_hook.get_conn()
     cursor = connection.cursor()
     cursor.execute("PUT file://./bank_data.csv @bank_stage")
-    print(f"snow put")
     # 데이터 로드
     cursor.execute("""
             COPY INTO FINANCIAL_SC
