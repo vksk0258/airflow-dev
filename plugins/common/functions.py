@@ -21,7 +21,6 @@ def extract_from_oracle(**kwargs):
     ti.xcom_push(key="df", value=df)
     cursor.close()
     connection.close()
-    return df
 
 def transform_data(**kwargs):
     ti = kwargs['ti']
@@ -52,6 +51,5 @@ def transform_data(**kwargs):
             FILE_FORMAT = (TYPE = 'CSV', FIELD_OPTIONALLY_ENCLOSED_BY='"',  SKIP_HEADER = 1)
         """)
 
-    print(f"snow copy")
     connection.close()
     cursor.close()
