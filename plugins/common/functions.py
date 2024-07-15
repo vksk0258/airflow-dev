@@ -11,6 +11,7 @@ def extract_from_oracle_all():
     """
     connection = oracle_hook.get_conn()
     cursor = connection.cursor()
+    cursor.execute(sql)
     data = cursor.fetchall()
     column_names = [desc[0] for desc in cursor.description]
     df = pd.DataFrame(data, columns=column_names)
