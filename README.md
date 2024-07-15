@@ -17,7 +17,12 @@
   - (2024.07.09) : git 최초 배포 및 yaml파일로 dag path 수정
     - airflow/dag => airflow/airflow-dev/dag
   - (2024.07.09) : airflow.cfg 로그 타입 INFO => DEBUG 파라미터 변경
-
+  - (2024.07.15)dkpoc05 airflow 서버 새로 설치
+    - version
+      - airflow 2.7.3
+      - python 3.9
+      - requirements.txt
+    - 이미지 생성 : airflow273_py39
 ## - git 작성자
   - 나문오 :
   - 김예진 :
