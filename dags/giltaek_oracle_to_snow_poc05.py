@@ -45,8 +45,10 @@ def transform_data(**kwargs):
     df_pivot.columns = [str(col) if isinstance(col, tuple) else col for col in df_pivot.columns]
     df_transformed = df_pivot.rename_axis(None, axis=1).reset_index(drop=True)
 
-    df_transformed.to_csv("./table.csv", header=False)
+    print(df_transformed)
+    df_transformed.to_csv("./bank_data.csv", header=False)
 
+    print('test1')
     snowflake_hook = SnowflakeHook(snowflake_conn_id='snow_itsmart')
     connection = snowflake_hook.get_conn()
     cursor = connection.cursor()
