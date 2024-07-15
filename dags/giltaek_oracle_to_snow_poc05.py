@@ -66,7 +66,7 @@ def transform_data(**kwargs):
     os.remove(FILE_PATH)
 
 with DAG(
-    dag_id="giltaek_oracle_to_snowflake",
+    dag_id="giltaek_oracle_to_snow_poc05",
     # 이덱은 매일 6시 30분에 시작
     schedule="30 6 * * *",
     # 덱이 언제 부터 돌지 TZ=타임존
