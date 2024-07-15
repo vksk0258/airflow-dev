@@ -2,7 +2,7 @@ from airflow.providers.oracle.hooks.oracle import OracleHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 import pandas as pd
 
-def extract_from_oracle():
+def extract_from_oracle(**kwargs):
     oracle_hook = OracleHook(oracle_conn_id='ora_mason')
     sql = """
     SELECT * FROM (SELECT ENTITY_NAME, CITY, STATE_ABBREVIATION, VARIABLE_NAME, YEAR, MONTH, VALUE, UNIT, DEFINITION
@@ -11,9 +11,14 @@ def extract_from_oracle():
     connection = oracle_hook.get_conn()
     cursor = connection.cursor()
     cursor.execute(sql)
+    ti = kwargs['ti']
+    ti.xcom_push(key="sql_exec", value=cursor)
     data = cursor.fetchall()
+    ti.xcom_push(key="cursor_fetchall", value=data)
     column_names = [desc[0] for desc in cursor.description]
+    ti.xcom_push(key="cursor_description", value=column_names)
     df = pd.DataFrame(data, columns=column_names)
+    ti.xcom_push(key="df", value=df)
     cursor.close()
     connection.close()
     return df.to_dict('records')
