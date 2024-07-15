@@ -14,7 +14,7 @@ SHARED_DIR = './'
 FILE_PATH = os.path.join(SHARED_DIR, 'bank_data.csv')
 
 def extract_from_oracle():
-    oracle_hook = OracleHook(oracle_conn_id='Ora_mason')
+    oracle_hook = OracleHook(oracle_conn_id='ora_mason')
     sql = """
     SELECT * FROM (SELECT ENTITY_NAME, CITY, STATE_ABBREVIATION, VARIABLE_NAME, YEAR, MONTH, VALUE, UNIT, DEFINITION
     FROM MASON.FINANCIAL_ENTITY_ANNUAL_TIME_SERIES) WHERE ROWNUM <= 100
@@ -47,7 +47,7 @@ def transform_data(**kwargs):
 
     df_transformed.to_csv("./table.csv", header=False)
 
-    snowflake_hook = SnowflakeHook(snowflake_conn_id='Snow _itsmart')
+    snowflake_hook = SnowflakeHook(snowflake_conn_id='snow_itsmart')
     connection = snowflake_hook.get_conn()
     cursor = connection.cursor()
     cursor.execute("PUT file://./bank_data.csv @bank_stage")
