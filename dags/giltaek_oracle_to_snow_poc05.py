@@ -32,8 +32,8 @@ def extract_from_oracle():
 
 def transform_data(**kwargs):
     ti = kwargs['ti']
-    data = ti.xcom_pull(task_ids='extract_from_oracle')
-    df = pd.DataFrame(data)
+    df = ti.xcom_pull(task_ids='extract_from_oracle')
+    # df = pd.DataFrame(data)
 
     df_pivot = df.pivot_table(
         index=['ENTITY_NAME', 'CITY', 'STATE_ABBREVIATION', 'YEAR'],

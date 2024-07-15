@@ -20,12 +20,12 @@ def extract_from_oracle(**kwargs):
     ti.xcom_push(key="df", value=df)
     cursor.close()
     connection.close()
-    return df.to_dict('records')
+    return df
 
 def transform_data(**kwargs):
     ti = kwargs['ti']
-    data = ti.xcom_pull(task_ids='extract_from_oracle')
-    df = pd.DataFrame(data)
+    df = ti.xcom_pull(key="df", task_ids='extract_from_oracle')
+    # df = pd.DataFrame(data)
 
     df_pivot = df.pivot_table(
         index=['ENTITY_NAME', 'CITY', 'STATE_ABBREVIATION', 'YEAR'],
