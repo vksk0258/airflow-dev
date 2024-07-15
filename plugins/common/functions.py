@@ -1,8 +1,5 @@
 from airflow.providers.oracle.hooks.oracle import OracleHook
-from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
-from airflow.providers.oracle.operators.oracle import OracleStoredProcedureOperator
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
-
 import pandas as pd
 
 def extract_from_oracle():
@@ -44,3 +41,14 @@ def transform_data(**kwargs):
     connection = snowflake_hook.get_conn()
     cursor = connection.cursor()
     cursor.execute("PUT file://./bank_data.csv @bank_stage")
+    print(f"snow put")
+    # 데이터 로드
+    cursor.execute("""
+            COPY INTO FINANCIAL_SC
+            FROM @bank_stage/bank_data.csv
+            FILE_FORMAT = (TYPE = 'CSV', FIELD_OPTIONALLY_ENCLOSED_BY='"',  SKIP_HEADER = 1)
+        """)
+
+    print(f"snow copy")
+    connection.close()
+    cursor.close()
