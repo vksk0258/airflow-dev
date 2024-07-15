@@ -44,7 +44,7 @@ def transform_data(**kwargs):
     snowflake_hook = SnowflakeHook(snowflake_conn_id='snow_itsmart')
     connection = snowflake_hook.get_conn()
     cursor = connection.cursor()
-    cursor.execute("PUT file:/opt/airflow/plugins/shell/bank_data.csv @bank_stage")
+    cursor.execute("PUT file:///opt/airflow/plugins/shell/bank_data.csv @bank_stage")
     # 데이터 로드
     cursor.execute("""
             COPY INTO FINANCIAL_SC
