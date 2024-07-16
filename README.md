@@ -8,6 +8,9 @@
 
 ## - 덱 정의
   - 나문오
+    - moonoh_echo_test : Airflow DAG 테스트용 echo 테스트
+    - moonoh_oracle_etl_test_dag : Oracle to Oracle 프로세스 Sort 사용
+    - moonoh_snowflake_transform_test : Oracle to Snowflake 프로세스 트랜스폼 사용
   - 김예진
   - 나성천
   - 유길택
@@ -24,8 +27,8 @@
       - requirements.txt
     - 이미지 생성 : airflow273_py39
 ## - git 작성자
-  - 나문오 :
-  - 김예진 :
-  - 나성천 :
-  - 유길택 :
+  - 나문오
+  - 김예진
+  - 나성천
+  - 유길택
 
