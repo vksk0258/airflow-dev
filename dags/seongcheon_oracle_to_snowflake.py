@@ -1,5 +1,7 @@
 import os
 import csv
+import time
+import pprint
 from airflow import DAG
 from airflow.providers.oracle.hooks.oracle import OracleHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
@@ -12,6 +14,7 @@ SHARED_DIR = './'
 FILE_PATH = os.path.join(SHARED_DIR, 'bank_data.csv')
 
 def extract_data_from_oracle():
+    start = time.time()
     oracle_hook = OracleHook(oracle_conn_id='Ora_mason')
     conn = oracle_hook.get_conn()
     cursor = conn.cursor()
@@ -28,6 +31,8 @@ def extract_data_from_oracle():
          GROUP BY ENTITY_NAME, CITY, STATE_ABBREVIATION, to_date(to_char(YEAR) || '-' || to_char(MONTH,'00') || '-' || '01', 'YYYY-MM-DD') 
          ORDER BY to_date(to_char(YEAR) || '-' || to_char(MONTH,'00') || '-' || '01', 'YYYY-MM-DD')"""
     cursor.execute(sql)
+    point1 = time.time()
+    pprint.pprint(f"SQL를 통해 변환된 데이터를 가져오는 시간: {point1 - start} sec")
     result = cursor.fetchall()
     column_names = [desc[0] for desc in cursor.description]
 
@@ -45,13 +50,14 @@ def extract_data_from_oracle():
     
     cursor.close()
     conn.close()
+    point2 = time.time()
+    pprint.pprint(f"Airflow 서버에 csv파일로 저장하는 시간: {point2 - point1} sec")
 
 def load_data_to_snowflake():
-    print(f"snow시작")
+    point3 = time.time()
     snowflake_hook = SnowflakeHook(snowflake_conn_id='Snow _itsmart')
     conn = snowflake_hook.get_conn()
     cursor = conn.cursor()
-    print(f"snow시작")
 
     # Snowflake stage에 파일 업로드
     stage_name = 'bank_stage'
@@ -73,6 +79,8 @@ def load_data_to_snowflake():
 
     # 로컬 파일 삭제
     os.remove(FILE_PATH)
+    point4 = time.time()
+    pprint.pprint(f"Airflow 서버에 csv파일로 저장하는 시간: {point4 - point3} sec")
 
 default_args = {
     'owner': 'airflow',
