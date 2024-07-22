@@ -38,7 +38,7 @@ def extract_from_oracle(file_path, **kwargs):
     oracle_hook = OracleHook(oracle_conn_id='Ora_mason')
     sql = """
     SELECT * FROM (SELECT ENTITY_NAME, CITY, STATE_ABBREVIATION, VARIABLE_NAME, YEAR, MONTH, VALUE, UNIT, DEFINITION
-    FROM MASON.FINANCIAL_ENTITY_ANNUAL_TIME_SERIES) WHERE ROWNUM <= 100
+    FROM MASON.FINANCIAL_ENTITY_ANNUAL_TIME_SERIES) WHERE ROWNUM <= 10
     """
     df = oracle_hook.get_pandas_df(sql)
     logging.info(f"Extracted data: {df.head()}")
