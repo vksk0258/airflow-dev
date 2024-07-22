@@ -17,7 +17,7 @@ default_args = {
 }
 
 dag = DAG(
-    'snowflake_transform_test',
+    'moonoh_snowflake_transform_test02',
     default_args=default_args,
     description='Extract from Oracle, transform, and load to Snowflake',
     schedule_interval='@daily',
