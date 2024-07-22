@@ -67,6 +67,8 @@ def load_to_snowflake(file_path, **kwargs):
         raise FileNotFoundError(f"Input file does not exist: {file_path}")
 
     df = pd.read_json(file_path)
+    df = df.where(pd.notnull(df), None)
+
     snowflake_hook = SnowflakeHook(snowflake_conn_id='Snow_mason')
     conn = snowflake_hook.get_conn()
     cursor = conn.cursor()
