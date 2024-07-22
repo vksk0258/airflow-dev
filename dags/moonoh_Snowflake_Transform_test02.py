@@ -85,7 +85,7 @@ def load_to_snowflake(file_path, **kwargs):
 extract_task = PythonOperator(
     task_id='extract_from_oracle',
     python_callable=extract_from_oracle,
-    op_kwargs={'file_path': '/home/app/docker/airflow/jsonFile/extracted_data.json'},
+    op_kwargs={'file_path': './home/app/docker/airflow/jsonFile/extracted_data.json'},
     dag=dag,
 )
 
@@ -93,8 +93,8 @@ transform_task = PythonOperator(
     task_id='transform_data',
     python_callable=transform_data,
     op_kwargs={
-        'input_path': '/home/app/docker/airflow/jsonFile/extracted_data.json',
-        'output_path': '/home/app/docker/airflow/jsonFile/transformed_data.json'
+        'input_path': './home/app/docker/airflow/jsonFile/extracted_data.json',
+        'output_path': './home/app/docker/airflow/jsonFile/transformed_data.json'
     },
     dag=dag,
 )
@@ -102,7 +102,7 @@ transform_task = PythonOperator(
 load_task = PythonOperator(
     task_id='load_to_snowflake',
     python_callable=load_to_snowflake,
-    op_kwargs={'file_path': '/home/app/docker/airflow/jsonFile/transformed_data.json'},
+    op_kwargs={'file_path': './home/app/docker/airflow/jsonFile/transformed_data.json'},
     dag=dag,
 )
 
