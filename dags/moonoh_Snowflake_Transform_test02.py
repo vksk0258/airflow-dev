@@ -96,8 +96,8 @@ def load_to_snowflake(file_path, **kwargs):
     data = [
         (
             row['ENTITY_NAME'], row['CITY'], row['STATE_ABBREVIATION'], row['YEAR'],
-            row['"Total Assets"'], row['"Total Securities"'], row['"Total deposits"'],
-            row['"% Insured (Estimated)"'], row['"All Real Estate Loans"']
+            row['Total Assets'], row['Total Securities'], row['Total deposits'],
+            row['% Insured (Estimated)'], row['All Real Estate Loans']
         )
         for _, row in df.iterrows()
     ]
