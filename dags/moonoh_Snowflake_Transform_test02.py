@@ -21,7 +21,7 @@ dag = DAG(
     schedule_interval='@daily',
 )
 
-def extract_from_oracle(**kwargs):
+def extract_from_oracle(file_path, **kwargs):
     oracle_hook = OracleHook(oracle_conn_id='Ora_mason')
     sql = """
     SELECT * FROM (SELECT ENTITY_NAME, CITY, STATE_ABBREVIATION, VARIABLE_NAME, YEAR, MONTH, VALUE, UNIT, DEFINITION
@@ -30,7 +30,7 @@ def extract_from_oracle(**kwargs):
     df = oracle_hook.get_pandas_df(sql)
     df.to_json(file_path, orient='records')
 
-def transform_data(**kwargs):
+def transform_data(input_path, output_path, **kwargs):
     df = pd.read_json(input_path)
     df_pivot = df.pivot_table(
         index=['ENTITY_NAME', 'CITY', 'STATE_ABBREVIATION', 'YEAR'],
@@ -41,7 +41,7 @@ def transform_data(**kwargs):
     df_pivot = df_pivot.rename_axis(None, axis=1).reset_index(drop=True)
     df_pivot.to_json(output_path, orient='records')
 
-def load_to_snowflake(**kwargs):
+def load_to_snowflake(file_path, **kwargs):
     df = pd.read_json(file_path)
     snowflake_hook = SnowflakeHook(snowflake_conn_id='Snow_mason')
     conn = snowflake_hook.get_conn()
@@ -85,7 +85,7 @@ def load_to_snowflake(**kwargs):
 extract_task = PythonOperator(
     task_id='extract_from_oracle',
     python_callable=extract_from_oracle,
-    op_kwargs={'file_path': '/tmp/extracted_data.json'},
+    op_kwargs={'file_path': '/home/app/docker/airflow/jsonFile/extracted_data.json'},
     dag=dag,
 )
 
@@ -93,8 +93,8 @@ transform_task = PythonOperator(
     task_id='transform_data',
     python_callable=transform_data,
     op_kwargs={
-        'input_path': '/tmp/extracted_data.json',
-        'output_path': '/tmp/transformed_data.json'
+        'input_path': '/home/app/docker/airflow/jsonFile/extracted_data.json',
+        'output_path': '/home/app/docker/airflow/jsonFile/transformed_data.json'
     },
     dag=dag,
 )
@@ -102,7 +102,7 @@ transform_task = PythonOperator(
 load_task = PythonOperator(
     task_id='load_to_snowflake',
     python_callable=load_to_snowflake,
-    op_kwargs={'file_path': '/tmp/transformed_data.json'},
+    op_kwargs={'file_path': '/home/app/docker/airflow/jsonFile/transformed_data.json'},
     dag=dag,
 )
 
