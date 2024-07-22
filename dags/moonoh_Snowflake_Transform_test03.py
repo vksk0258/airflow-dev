@@ -58,7 +58,7 @@ def transform_data(input_path, output_path, **kwargs):
         aggfunc='first'
     ).reset_index()
     df_pivot = df_pivot.rename_axis(None, axis=1).reset_index(drop=True)
-    df_pivot.columns = df_pivot.columns.str.strip('"')  # Remove any leading/trailing quotes
+    df_pivot.columns = df_pivot.columns.str.strip('"')
     df_pivot.to_json(output_path, orient='records')
     logging.info(f"Transformed data saved to {output_path}")
 
@@ -68,14 +68,12 @@ def load_to_snowflake(file_path, **kwargs):
         raise FileNotFoundError(f"Input file does not exist: {file_path}")
 
     df = pd.read_json(file_path)
-    # Convert NaN to None
     df = df.where(pd.notnull(df), None)
     
     snowflake_hook = SnowflakeHook(snowflake_conn_id='Snow_mason')
     conn = snowflake_hook.get_conn()
     cursor = conn.cursor()
     
-    # Create target table if it does not exist
     create_table_query = """
     CREATE TABLE IF NOT EXISTS MASON.FINANCIAL_ENTITY_ANNUAL_TIME_SERIES_TRANSFORMED (
         ENTITY_NAME STRING,
@@ -92,17 +90,14 @@ def load_to_snowflake(file_path, **kwargs):
     cursor.execute(create_table_query)
     conn.commit()
 
-    # Use temporary file to save DataFrame to CSV
     with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as tmp_file:
         df.to_csv(tmp_file.name, index=False, header=True)
         tmp_file_path = tmp_file.name
 
-    # Use PUT command to upload the file to Snowflake stage
     put_query = f"PUT file://{tmp_file_path} @%MASON.FINANCIAL_ENTITY_ANNUAL_TIME_SERIES_TRANSFORMED"
     cursor.execute(put_query)
     conn.commit()
     
-    # Use COPY INTO command to load data from stage to Snowflake table
     copy_query = """
     COPY INTO MASON.FINANCIAL_ENTITY_ANNUAL_TIME_SERIES_TRANSFORMED
     FROM @%MASON.FINANCIAL_ENTITY_ANNUAL_TIME_SERIES_TRANSFORMED
@@ -112,7 +107,7 @@ def load_to_snowflake(file_path, **kwargs):
     conn.commit()
 
     logging.info(f"Data loaded to Snowflake table MASON.FINANCIAL_ENTITY_ANNUAL_TIME_SERIES_TRANSFORMED")
-    os.remove(tmp_file_path)  # Clean up temporary file
+    os.remove(tmp_file_path)
 
 extract_task = PythonOperator(
     task_id='extract_from_oracle',
