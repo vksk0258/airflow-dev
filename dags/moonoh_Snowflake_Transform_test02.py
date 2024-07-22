@@ -4,6 +4,8 @@ from airflow.providers.oracle.hooks.oracle import OracleHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from datetime import datetime
 import pandas as pd
+import os
+import logging
 
 default_args = {
     'owner': 'mason',
@@ -15,7 +17,7 @@ default_args = {
 }
 
 dag = DAG(
-    'moonoh_Snowflake_Transform_test02',
+    'snowflake_transform_test',
     default_args=default_args,
     description='Extract from Oracle, transform, and load to Snowflake',
     schedule_interval='@daily',
@@ -25,17 +27,28 @@ def ensure_directory_exists(file_path):
     directory = os.path.dirname(file_path)
     if not os.path.exists(directory):
         os.makedirs(directory)
+        logging.info(f"Created directory: {directory}")
+    if not os.access(directory, os.W_OK):
+        raise PermissionError(f"Directory is not writable: {directory}")
 
 def extract_from_oracle(file_path, **kwargs):
+    logging.info(f"Starting extract_from_oracle, file_path: {file_path}")
+    ensure_directory_exists(file_path)
+
     oracle_hook = OracleHook(oracle_conn_id='Ora_mason')
     sql = """
     SELECT * FROM (SELECT ENTITY_NAME, CITY, STATE_ABBREVIATION, VARIABLE_NAME, YEAR, MONTH, VALUE, UNIT, DEFINITION
     FROM MASON.FINANCIAL_ENTITY_ANNUAL_TIME_SERIES) WHERE ROWNUM <= 100
     """
     df = oracle_hook.get_pandas_df(sql)
+    logging.info(f"Extracted data: {df.head()}")
     df.to_json(file_path, orient='records')
+    logging.info(f"Data saved to {file_path}")
 
 def transform_data(input_path, output_path, **kwargs):
+    logging.info(f"Starting transform_data, input_path: {input_path}, output_path: {output_path}")
+    ensure_directory_exists(output_path)
+
     df = pd.read_json(input_path)
     df_pivot = df.pivot_table(
         index=['ENTITY_NAME', 'CITY', 'STATE_ABBREVIATION', 'YEAR'],
@@ -45,8 +58,13 @@ def transform_data(input_path, output_path, **kwargs):
     ).reset_index()
     df_pivot = df_pivot.rename_axis(None, axis=1).reset_index(drop=True)
     df_pivot.to_json(output_path, orient='records')
+    logging.info(f"Transformed data saved to {output_path}")
 
 def load_to_snowflake(file_path, **kwargs):
+    logging.info(f"Starting load_to_snowflake, file_path: {file_path}")
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"Input file does not exist: {file_path}")
+
     df = pd.read_json(file_path)
     snowflake_hook = SnowflakeHook(snowflake_conn_id='Snow_mason')
     conn = snowflake_hook.get_conn()
@@ -69,7 +87,7 @@ def load_to_snowflake(file_path, **kwargs):
     conn.commit()
 
     insert_query = """
-    INSERT INTO your_table (
+    INSERT INTO MASON.FINANCIAL_ENTITY_ANNUAL_TIME_SERIES_TRANSFORMED (
         ENTITY_NAME, CITY, STATE_ABBREVIATION, YEAR, "Total Assets",
         "Total Securities", "Total deposits", "% Insured (Estimated)", "All Real Estate Loans"
     ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -86,6 +104,7 @@ def load_to_snowflake(file_path, **kwargs):
     
     cursor.executemany(insert_query, data)
     conn.commit()
+    logging.info(f"Data loaded to Snowflake table MASON.FINANCIAL_ENTITY_ANNUAL_TIME_SERIES_TRANSFORMED")
 
 extract_task = PythonOperator(
     task_id='extract_from_oracle',
