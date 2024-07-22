@@ -6,6 +6,7 @@ from datetime import datetime
 import pandas as pd
 import os
 import logging
+import numpy as np
 
 default_args = {
     'owner': 'mason',
@@ -57,9 +58,12 @@ def transform_data(input_path, output_path, **kwargs):
         aggfunc='first'
     ).reset_index()
     df_pivot = df_pivot.rename_axis(None, axis=1).reset_index(drop=True)
-    df_pivot.columns = df_pivot.columns.str.strip('"')
+    df_pivot.columns = df_pivot.columns.str.strip('"')  # Remove any leading/trailing quotes
     df_pivot.to_json(output_path, orient='records')
     logging.info(f"Transformed data saved to {output_path}")
+
+def replace_nan_with_none(data):
+    return [None if pd.isna(x) else x for x in data]
 
 def load_to_snowflake(file_path, **kwargs):
     logging.info(f"Starting load_to_snowflake, file_path: {file_path}")
@@ -67,8 +71,7 @@ def load_to_snowflake(file_path, **kwargs):
         raise FileNotFoundError(f"Input file does not exist: {file_path}")
 
     df = pd.read_json(file_path)
-    df = df.where(pd.notnull(df), None)
-
+    
     data = [
         (
             row['ENTITY_NAME'], row['CITY'], row['STATE_ABBREVIATION'], row['YEAR'],
@@ -78,8 +81,10 @@ def load_to_snowflake(file_path, **kwargs):
         for _, row in df.iterrows()
     ]
 
-    logging.info(f"First record: {data[0] if data else 'No data to insert'}")
+    data = [replace_nan_with_none(record) for record in data]
 
+    logging.info(f"First record: {data[0] if data else 'No data to insert'}")
+    
     snowflake_hook = SnowflakeHook(snowflake_conn_id='Snow_mason')
     conn = snowflake_hook.get_conn()
     cursor = conn.cursor()
