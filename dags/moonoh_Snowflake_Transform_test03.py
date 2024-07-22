@@ -133,7 +133,7 @@ transform_task = PythonOperator(
 
 load_task = PythonOperator(
     task_id='load_to_snowflake',
-    python_callable=load_to_snowflake,
+    python_callable=load_to_snowflake, 
     op_kwargs={'file_path': '/tmp/transformed_data.json'},
     dag=dag,
 )
