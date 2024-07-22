@@ -38,8 +38,8 @@ def extract_from_oracle(file_path, **kwargs):
 
     oracle_hook = OracleHook(oracle_conn_id='Ora_mason')
     sql = """
-    SELECT ENTITY_NAME, CITY, STATE_ABBREVIATION, VARIABLE_NAME, YEAR, MONTH, VALUE, UNIT, DEFINITION
-    FROM MASON.FINANCIAL_ENTITY_ANNUAL_TIME_SERIES
+    SELECT * FROM (SELECT ENTITY_NAME, CITY, STATE_ABBREVIATION, VARIABLE_NAME, YEAR, MONTH, VALUE, UNIT, DEFINITION
+    FROM MASON.FINANCIAL_ENTITY_ANNUAL_TIME_SERIES) WHERE ROWNUM <= 100
     """
     df = oracle_hook.get_pandas_df(sql)
     logging.info(f"Extracted data: {df.head()}")
@@ -81,6 +81,7 @@ def load_to_snowflake(file_path, **kwargs):
         for _, row in df.iterrows()
     ]
 
+    # Replace NaN with None in data
     data = [replace_nan_with_none(record) for record in data]
 
     logging.info(f"First record: {data[0] if data else 'No data to insert'}")
@@ -112,8 +113,13 @@ def load_to_snowflake(file_path, **kwargs):
     ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
     
-    cursor.executemany(insert_query, data)
-    conn.commit()
+    batch_size = 1000
+    for i in range(0, len(data), batch_size):
+        batch = data[i:i+batch_size]
+        cursor.executemany(insert_query, batch)
+        conn.commit()
+        logging.info(f"Inserted batch {i//batch_size + 1}")
+
     logging.info(f"Data loaded to Snowflake table MASON.FINANCIAL_ENTITY_ANNUAL_TIME_SERIES_TRANSFORMED")
 
 extract_task = PythonOperator(
