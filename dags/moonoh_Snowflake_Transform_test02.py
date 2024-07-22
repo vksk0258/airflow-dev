@@ -57,6 +57,7 @@ def transform_data(input_path, output_path, **kwargs):
         aggfunc='first'
     ).reset_index()
     df_pivot = df_pivot.rename_axis(None, axis=1).reset_index(drop=True)
+    df_pivot.columns = df_pivot.columns.str.strip('"')
     df_pivot.to_json(output_path, orient='records')
     logging.info(f"Transformed data saved to {output_path}")
 
