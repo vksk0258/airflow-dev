@@ -58,7 +58,7 @@ def transform_data(input_path, output_path, **kwargs):
         aggfunc='first'
     ).reset_index()
     df_pivot = df_pivot.rename_axis(None, axis=1).reset_index(drop=True)
-    df_pivot.columns = df_pivot.columns.str.strip('"')
+    df_pivot.columns = df_pivot.columns.str.strip('"') 
     df_pivot.to_json(output_path, orient='records')
     logging.info(f"Transformed data saved to {output_path}")
 
@@ -90,24 +90,30 @@ def load_to_snowflake(file_path, **kwargs):
     cursor.execute(create_table_query)
     conn.commit()
 
+    create_stage_query = """
+    CREATE STAGE IF NOT EXISTS my_stage;
+    """
+    cursor.execute(create_stage_query)
+    conn.commit()
+
     with tempfile.NamedTemporaryFile(delete=False, suffix='.csv') as tmp_file:
         df.to_csv(tmp_file.name, index=False, header=True)
         tmp_file_path = tmp_file.name
 
-    put_query = f"PUT file://{tmp_file_path} @%MASON.FINANCIAL_ENTITY_ANNUAL_TIME_SERIES_TRANSFORMED"
+    put_query = f"PUT file://{tmp_file_path} @my_stage"
     cursor.execute(put_query)
     conn.commit()
     
     copy_query = """
     COPY INTO MASON.FINANCIAL_ENTITY_ANNUAL_TIME_SERIES_TRANSFORMED
-    FROM @%MASON.FINANCIAL_ENTITY_ANNUAL_TIME_SERIES_TRANSFORMED
+    FROM @my_stage
     FILE_FORMAT = (TYPE = CSV, FIELD_OPTIONALLY_ENCLOSED_BY = '"', SKIP_HEADER = 1)
     """
     cursor.execute(copy_query)
     conn.commit()
 
     logging.info(f"Data loaded to Snowflake table MASON.FINANCIAL_ENTITY_ANNUAL_TIME_SERIES_TRANSFORMED")
-    os.remove(tmp_file_path)
+    os.remove(tmp_file_path) 
 
 extract_task = PythonOperator(
     task_id='extract_from_oracle',
@@ -128,7 +134,7 @@ transform_task = PythonOperator(
 
 load_task = PythonOperator(
     task_id='load_to_snowflake',
-    python_callable=load_to_snowflake, 
+    python_callable=load_to_snowflake,
     op_kwargs={'file_path': '/tmp/transformed_data.json'},
     dag=dag,
 )
