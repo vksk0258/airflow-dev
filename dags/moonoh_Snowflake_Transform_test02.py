@@ -69,6 +69,17 @@ def load_to_snowflake(file_path, **kwargs):
     df = pd.read_json(file_path)
     df = df.where(pd.notnull(df), None)
 
+    data = [
+        (
+            row['ENTITY_NAME'], row['CITY'], row['STATE_ABBREVIATION'], row['YEAR'],
+            row['Total Assets'], row['Total Securities'], row['Total deposits'],
+            row['% Insured (Estimated)'], row['All Real Estate Loans']
+        )
+        for _, row in df.iterrows()
+    ]
+
+    logging.info(f"First record: {data[0] if data else 'No data to insert'}")
+
     snowflake_hook = SnowflakeHook(snowflake_conn_id='Snow_mason')
     conn = snowflake_hook.get_conn()
     cursor = conn.cursor()
@@ -95,15 +106,6 @@ def load_to_snowflake(file_path, **kwargs):
         "Total Securities", "Total deposits", "% Insured (Estimated)", "All Real Estate Loans"
     ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
-    
-    data = [
-        (
-            row['ENTITY_NAME'], row['CITY'], row['STATE_ABBREVIATION'], row['YEAR'],
-            row['Total Assets'], row['Total Securities'], row['Total deposits'],
-            row['% Insured (Estimated)'], row['All Real Estate Loans']
-        )
-        for _, row in df.iterrows()
-    ]
     
     cursor.executemany(insert_query, data)
     conn.commit()
