@@ -11,6 +11,7 @@
     - moonoh_echo_test : Airflow DAG 테스트용 echo 테스트
     - moonoh_oracle_etl_test_dag : Oracle to Oracle 프로세스 Sort 사용
     - moonoh_snowflake_transform_test : Oracle to Snowflake 프로세스 트랜스폼 사용
+    - moonoh_snowflake_transform_test02/03 : Insert VS Copy Load 테스트
   - 김예진
   - 나성천
   - 유길택
