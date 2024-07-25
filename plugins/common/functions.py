@@ -43,6 +43,8 @@ def extract_from_oracle_all():
     start = time.time()
     oracle_hook = OracleHook(oracle_conn_id='ora_mason')
     sql = """
+    
+    
     SELECT * FROM (SELECT ENTITY_NAME, CITY, STATE_ABBREVIATION, VARIABLE_NAME, YEAR, MONTH, VALUE, UNIT, DEFINITION
     FROM MASON.FINANCIAL_ENTITY_ANNUAL_TIME_SERIES)
     """
