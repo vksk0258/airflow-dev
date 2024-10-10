@@ -16,12 +16,12 @@ with DAG(
 ) as dag:
     extract_from_oracle = PythonOperator(
         task_id='extract_from_oracle_all',
-        python_callable=fn.extract_from_oracle
+        python_callable=fn.extract_from_oracle_all
     )
 
     load_data = PythonOperator(
         task_id='load_data',
-        python_callable=fn.transform_data
+        python_callable=fn.load_data
     )
 
     extract_from_oracle >> load_data
