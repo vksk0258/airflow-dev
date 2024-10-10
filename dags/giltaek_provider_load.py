@@ -15,7 +15,7 @@ with DAG(
     tags=["oracle", "snowflake", "pandas"]
 ) as dag:
     extract_from_oracle = PythonOperator(
-        task_id='extract_from_oracle',
+        task_id='extract_from_oracle_all',
         python_callable=fn.extract_from_oracle
     )
 
