@@ -151,28 +151,15 @@ def transform_data(**kwargs):
 
 
 
-def load_data(**kwargs):
-    ti = kwargs['ti']
-    df = ti.xcom_pull(key="df", task_ids='extract_from_oracle')
-    df = pd.DataFrame(df)
-    
-    # df_pivot = df.pivot_table(
-    #     index=['ENTITY_NAME', 'CITY', 'STATE_ABBREVIATION', 'YEAR'],
-    #     columns='VARIABLE_NAME',
-    #     values='VALUE',
-    #     aggfunc='first'
-    # ).reset_index()
-
-    # df_pivot.columns = [str(col) if isinstance(col, tuple) else col for col in df_pivot.columns]
-    # df_transformed = df_pivot.rename_axis(None, axis=1).reset_index(drop=True)
-
-    # pprint.pprint(df_transformed)
-    df.to_csv("/opt/airflow/plugins/files/bank_data.csv", header=False)
-
+def load_data():
+    point4 = time.time()
     snowflake_hook = SnowflakeHook(snowflake_conn_id='snow_dongchan')
     connection = snowflake_hook.get_conn()
     cursor = connection.cursor()
-    cursor.execute("PUT file:///opt/airflow/plugins/files/bank_data.csv @bank_stage")
+    cursor.execute("PUT file:///opt/airflow/plugins/files/bank_data_all.csv @bank_stage")
+
+    point5 = time.time()
+    pprint.pprint(f"PUT을 활용해서 CSV파일을 스테이지에 업로드 하는 시간: {point5 - point4} sec")
     # 데이터 로드
     cursor.execute("""
             COPY INTO FINANCIAL_ENTITY_ANNUAL_TIME_SERIES
@@ -182,3 +169,6 @@ def load_data(**kwargs):
 
     connection.close()
     cursor.close()
+
+    point6 = time.time()
+    pprint.pprint(f"COPY INTO 명령어를 날려 CSV파일을 테이블로 저장하는 시간: {point6 - point5} sec")
