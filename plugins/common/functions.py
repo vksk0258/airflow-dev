@@ -39,6 +39,8 @@ def df_to_sql():
 
     point3 = time.time()
     pprint.pprint(f"Airflow 서버에 csv파일로 저장하는 시간: {point3 - point2} sec")
+
+
 def extract_from_oracle_all():
     start = time.time()
     oracle_hook = OracleHook(oracle_conn_id='ora_mason')
@@ -150,6 +152,35 @@ def transform_data(**kwargs):
     cursor.close()
 
 
+
+
+def extract_from_oracle_dongchan():
+    start = time.time()
+    oracle_hook = OracleHook(oracle_conn_id='ora_mason')
+    sql = """
+    
+    
+    SELECT * FROM (SELECT ENTITY_NAME, CITY, STATE_ABBREVIATION, VARIABLE_NAME, YEAR, MONTH, VALUE, UNIT, DEFINITION
+    FROM MASON.FINANCIAL_ENTITY_ANNUAL_TIME_SERIES)
+    """
+    connection = oracle_hook.get_conn()
+    cursor = connection.cursor()
+    cursor.execute(sql)
+
+    point1 = time.time()
+    pprint.pprint(f"SQL를 통해 데이터를 가져오는 시간: {point1 - start} sec")
+    data = cursor.fetchall()
+    column_names = [desc[0] for desc in cursor.description]
+    df = pd.DataFrame(data, columns=column_names)
+    cursor.close()
+    connection.close()
+   
+    point2 = time.time()
+    pprint.pprint(f"Pandas Pivot을 활용해 데이터를 트랜스폼 하는 시간: {point2 - point1} sec")
+    df.to_csv("/opt/airflow/plugins/files/bank_data_all.csv", header=False)
+
+    point3 = time.time()
+    pprint.pprint(f"Airflow 서버에 csv파일로 저장하는 시간: {point3 - point2} sec")
 
 def load_data():
     point4 = time.time()
