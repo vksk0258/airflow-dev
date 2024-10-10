@@ -166,7 +166,7 @@ def extract_from_oracle_dongchan():
     connection = oracle_hook.get_conn()
     cursor = connection.cursor()
     cursor.execute(sql)
-
+    
     point1 = time.time()
     pprint.pprint(f"SQL를 통해 데이터를 가져오는 시간: {point1 - start} sec")
     data = cursor.fetchall()
@@ -174,11 +174,15 @@ def extract_from_oracle_dongchan():
     df = pd.DataFrame(data, columns=column_names)
     cursor.close()
     connection.close()
-   
+    
+
+    pprint.pprint(len(df))
+
     point2 = time.time()
     pprint.pprint(f"Pandas Pivot을 활용해 데이터를 트랜스폼 하는 시간: {point2 - point1} sec")
     df.to_csv("/opt/airflow/plugins/files/bank_data_all.csv", header=False)
 
+    
     point3 = time.time()
     pprint.pprint(f"Airflow 서버에 csv파일로 저장하는 시간: {point3 - point2} sec")
 
