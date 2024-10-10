@@ -148,3 +148,37 @@ def transform_data(**kwargs):
 
     connection.close()
     cursor.close()
+
+
+
+def load_data(**kwargs):
+    ti = kwargs['ti']
+    df = ti.xcom_pull(key="df", task_ids='extract_from_oracle')
+    # df = pd.DataFrame(data)
+
+    # df_pivot = df.pivot_table(
+    #     index=['ENTITY_NAME', 'CITY', 'STATE_ABBREVIATION', 'YEAR'],
+    #     columns='VARIABLE_NAME',
+    #     values='VALUE',
+    #     aggfunc='first'
+    # ).reset_index()
+
+    # df_pivot.columns = [str(col) if isinstance(col, tuple) else col for col in df_pivot.columns]
+    # df_transformed = df_pivot.rename_axis(None, axis=1).reset_index(drop=True)
+
+    # pprint.pprint(df_transformed)
+    df.to_csv("/opt/airflow/plugins/files/bank_data.csv", header=False)
+
+    snowflake_hook = SnowflakeHook(snowflake_conn_id='snow_itsmart')
+    connection = snowflake_hook.get_conn()
+    cursor = connection.cursor()
+    cursor.execute("PUT file:///opt/airflow/plugins/files/bank_data.csv @bank_stage")
+    # 데이터 로드
+    cursor.execute("""
+            COPY INTO FINANCIAL_SC
+            FROM @bank_stage/bank_data.csv
+            FILE_FORMAT = (TYPE = 'CSV', FIELD_OPTIONALLY_ENCLOSED_BY='"',  SKIP_HEADER = 1)
+        """)
+
+    connection.close()
+    cursor.close()
