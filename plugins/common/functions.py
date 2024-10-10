@@ -88,7 +88,7 @@ def load_data_all():
     # 데이터 로드
     cursor.execute("""
             COPY INTO FINANCIAL_SC
-            FROM @bank_stage/bank_data.csv
+            FROM @bank_stage/bank_data_all.csv
             FILE_FORMAT = (TYPE = 'CSV', FIELD_OPTIONALLY_ENCLOSED_BY='"',  SKIP_HEADER = 1)
         """)
 
@@ -163,7 +163,7 @@ def load_data():
     # 데이터 로드
     cursor.execute("""
             COPY INTO FINANCIAL_ENTITY_ANNUAL_TIME_SERIES
-            FROM @bank_stage/bank_data.csv
+            FROM @bank_stage/bank_data_all.csv
             FILE_FORMAT = (TYPE = 'CSV', FIELD_OPTIONALLY_ENCLOSED_BY='"',  SKIP_HEADER = 1)
         """)
 
