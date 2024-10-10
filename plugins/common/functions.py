@@ -154,8 +154,8 @@ def transform_data(**kwargs):
 def load_data(**kwargs):
     ti = kwargs['ti']
     df = ti.xcom_pull(key="df", task_ids='extract_from_oracle')
-    # df = pd.DataFrame(data)
-
+    df = pd.DataFrame(df)
+    
     # df_pivot = df.pivot_table(
     #     index=['ENTITY_NAME', 'CITY', 'STATE_ABBREVIATION', 'YEAR'],
     #     columns='VARIABLE_NAME',
