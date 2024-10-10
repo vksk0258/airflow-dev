@@ -169,13 +169,13 @@ def load_data(**kwargs):
     # pprint.pprint(df_transformed)
     df.to_csv("/opt/airflow/plugins/files/bank_data.csv", header=False)
 
-    snowflake_hook = SnowflakeHook(snowflake_conn_id='snow_itsmart')
+    snowflake_hook = SnowflakeHook(snowflake_conn_id='snow_dongchan')
     connection = snowflake_hook.get_conn()
     cursor = connection.cursor()
     cursor.execute("PUT file:///opt/airflow/plugins/files/bank_data.csv @bank_stage")
     # 데이터 로드
     cursor.execute("""
-            COPY INTO FINANCIAL_SC
+            COPY INTO FINANCIAL_ENTITY_ANNUAL_TIME_SERIES
             FROM @bank_stage/bank_data.csv
             FILE_FORMAT = (TYPE = 'CSV', FIELD_OPTIONALLY_ENCLOSED_BY='"',  SKIP_HEADER = 1)
         """)
