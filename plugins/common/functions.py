@@ -162,7 +162,7 @@ def load_data():
     pprint.pprint(f"PUT을 활용해서 CSV파일을 스테이지에 업로드 하는 시간: {point5 - point4} sec")
     # 데이터 로드
     cursor.execute("""
-            COPY INTO FINANCIAL_ENTITY_ANNUAL_TIME_SERIES
+            COPY INTO FINANCIAL_TEST
             FROM @bank_stage/bank_data_all.csv
             FILE_FORMAT = (TYPE = 'CSV', FIELD_OPTIONALLY_ENCLOSED_BY='"',  SKIP_HEADER = 1)
         """)
